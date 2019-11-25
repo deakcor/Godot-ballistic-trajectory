@@ -1,7 +1,7 @@
 extends RigidBody
 
-var d=20
-var vitesse=30
+var d:float=20
+var vitesse:float=-4
 var t=0
 
 
@@ -16,3 +16,8 @@ func _process(delta):
 func _on_Area_body_entered(body):
 	if body.is_in_group("projectile"):
 		body.queue_free()
+
+
+func _on_Timer_timeout():
+	vitesse=-vitesse
+	t=0

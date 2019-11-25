@@ -3,5 +3,7 @@ extends Spatial
 
 
 func _on_Timer_timeout():
-	add_child(preload("projectile.tscn").instance())
+	var tmp=preload("projectile.tscn").instance()
+	tmp.translation.y+=1
+	add_child(tmp)
 	$Timer.start()

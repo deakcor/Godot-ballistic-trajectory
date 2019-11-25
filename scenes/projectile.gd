@@ -1,14 +1,14 @@
 extends RigidBody
 
-var proj_speed=50
-var gravity=9.8/2
+var proj_speed=20
+var gravity=9.81*2
 
 func _ready():
-	var cible=get_parent().get_node("cible")
-	var ballistic=solve_ballistic_arc(get_translation(), proj_speed, cible.get_translation(), cible.get_linear_velocity(), gravity)
+	var cible:RigidBody=get_parent().get_node("cible_cont/cible")
+	var ballistic=solve_ballistic_arc(get_translation(), proj_speed, cible.get_global_transform().origin, cible.linear_velocity, gravity)
 	apply_impulse(get_translation(),ballistic[1][0])
 #code : https://github.com/forrestthewoods/lib_fts/blob/master/code/fts_ballistic_trajectory.cs
-func solve_ballistic_arc(proj_pos, proj_speed, target_pos, target_velocity, gravity):
+func solve_ballistic_arc(proj_pos, proj_speed, target_pos, target_velocity:Vector3=Vector3(), gravity:float=9.81):
 
 	var s0 = [Vector3(0,0,0),0]
 	var s1 = [Vector3(0,0,0),0]
@@ -79,20 +79,20 @@ func SolveQuartic(c0,c1,c2,c3,c4) :
 	var s2
 	var s3
 	
-	var coeffs = [0,0,0,0]
-	var z
-	var u
-	var v
-	var sub
-	var A
-	var B
-	var C
-	var D
-	var sq_A
-	var p
-	var q
-	var r
-	var num
+	var coeffs:Array = [0,0,0,0]
+	var z:float
+	var u:float
+	var v:float
+	var sub:float
+	var A:float
+	var B:float
+	var C:float
+	var D:float
+	var sq_A:float
+	var p:float
+	var q:float
+	var r:float
+	var num:int
 	
 	#normal form: x^4 + Ax^3 + Bx^2 + Cx + D = 0
 	A = c1 / c0
@@ -114,7 +114,7 @@ func SolveQuartic(c0,c1,c2,c3,c4) :
 		coeffs[ 1 ] = 0
 		coeffs[ 0 ] = 1
 		
-		var tmp = SolveCubic(coeffs[0], coeffs[1], coeffs[2], coeffs[3])
+		var tmp:Array = SolveCubic(coeffs[0], coeffs[1], coeffs[2], coeffs[3])
 		num= tmp[0]
 		s0=tmp[1]
 		s1=tmp[2]
@@ -125,8 +125,7 @@ func SolveQuartic(c0,c1,c2,c3,c4) :
 		coeffs[ 2 ] = - r
 		coeffs[ 1 ] = - 1.0/2 * p
 		coeffs[ 0 ] = 1
-		print(coeffs[0], coeffs[1], coeffs[2], coeffs[3])
-		var tmp=SolveCubic(coeffs[0], coeffs[1], coeffs[2], coeffs[3])
+		var tmp:Array=SolveCubic(coeffs[0], coeffs[1], coeffs[2], coeffs[3])
 		s0=tmp[1]
 		s1=tmp[2]
 		s2=tmp[3]
@@ -137,18 +136,18 @@ func SolveQuartic(c0,c1,c2,c3,c4) :
 		u = z * z - r
 		v = 2 * z - p
 		if (IsZero(u)):
-		    u = 0
+			u = 0
 		elif (u > 0):
-		    u = sqrt(u);
+			u = sqrt(u);
 		else:
-		    return [0,s0,s1,s2,s3]
+			return [0,s0,s1,s2,s3]
 		
 		if (IsZero(v)):
-		    v = 0
+			v = 0
 		elif(v > 0):
-		    v = sqrt(v)
+			v = sqrt(v)
 		else:
-		    return [0,s0,s1,s2,s3]
+			return [0,s0,s1,s2,s3]
 		
 		coeffs[ 2 ] = z - u
 		coeffs[ 1 ] =   -v if q < 0 else v
@@ -182,37 +181,42 @@ func SolveQuartic(c0,c1,c2,c3,c4) :
 	# resubstitute 
 	sub = 1.0/4 * A;
 	
-	if (num > 0):    s0 -= sub;
-	if (num > 1):    s1 -= sub;
-	if (num > 2):    s2 -= sub;
-	if (num > 3):    s3 -= sub;
+	if (num > 0):    
+		s0 -= sub;
+	if (num > 1):    
+		s1 -= sub;
+	if (num > 2):    
+		s2 -= sub;
+	if (num > 3):    
+		s3 -= sub;
 	
 	return [num,s0,s1,s2,s3];
 		
 		
 func IsZero(d) :
-	var eps = 1e-9;
+	
+	var eps:float = 1*exp(-9);
 	return d > -eps and d < eps;
 func SolveCubic( c0,  c1,  c2,  c3):
 	var s0
 	var s1
 	var s2
 	
-	var num;
-	var sub;
-	var A
-	var B
-	var C;
-	var sq_A
-	var p
-	var q;
-	var cb_p
-	var D;
+	var num:int;
+	var sub:float;
+	var A:float
+	var B:float
+	var C:float
+	var sq_A:float
+	var p:float
+	var q:float
+	var cb_p:float
+	var D:float
 	
 	#normal form: x^3 + Ax^2 + Bx + C = 0
-	A = c1 / c0;
-	B = c2 / c0;
-	C = c3 / c0;
+	A = c1 / c0
+	B = c2 / c0
+	C = c3 / c0
 	
 	#  substitute x = y - A/3 to eliminate quadric term:  x^3 +px + q = 0 
 	sq_A = A * A;
@@ -228,22 +232,22 @@ func SolveCubic( c0,  c1,  c2,  c3):
 			s0 = 0;
 			num = 1;
 		else:
-			var u = pow(-q, 1.0/3.0);
+			var u:float = pow(-q, 1.0/3.0);
 			s0 = 2 * u;
 			s1 = - u;
 			num = 2;
 	elif(D < 0):
-		var phi = 1.0/3 * acos(-q / sqrt(-cb_p));
-		var t = 2 * sqrt(-p);
+		var phi:float = 1.0/3 * acos(-q / sqrt(-cb_p));
+		var t:float = 2 * sqrt(-p);
 		
 		s0 =   t * cos(phi);
 		s1 = - t * cos(phi + PI / 3);
 		s2 = - t * cos(phi - PI / 3);
 		num = 3;
 	else:
-		var sqrt_D = sqrt(D);
-		var u = pow(sqrt_D - q, 1.0/3.0);
-		var v = - pow(sqrt_D + q, 1.0/3.0);
+		var sqrt_D:float = sqrt(D);
+		var u:float = pow(sqrt_D - q, 1.0/3.0);
+		var v:float = - pow(sqrt_D + q, 1.0/3.0);
 		
 		s0 = u + v;
 		num = 1;
@@ -264,23 +268,23 @@ func SolveQuadric( c0,  c1,  c2):
 	var s0
 	var s1
 	
-	var p
-	var q
-	var D;
+	var p:float
+	var q:float
+	var D:float
 	
 	# normal form: x^2 + px + q = 0 */
 	p = c1 / (2 * c0);
 	q = c2 / c0;
 	
 	D = p * p - q;
-	var res=0
+	var res:int=0
 	if (IsZero(D)):
 		s0 = -p;
 		res= 1;
 	elif (D < 0):
 		res= 0;
 	else :
-		var sqrt_D = sqrt(D);
+		var sqrt_D:float = sqrt(D);
 		
 		s0 =   sqrt_D - p;
 		s1 = -sqrt_D - p;
